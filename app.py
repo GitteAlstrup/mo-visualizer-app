@@ -59,6 +59,37 @@ def run_pyscf_calculation(geometry_string, orbitals_to_plot):
     
     return scf_e
 
+def run_pyscf_localization(geometry_string):
+    """
+    Udfører en SCF-beregning og derefter en orbital-lokalisering
+    for at generere orbitaler, der ligner hybridorbitaler/bindinger.
+    """
+    # Ryd op i gamle .cube filer
+    for f in glob.glob("*.cube"):
+        os.remove(f)
+
+    # Konverter geometri og byg molekylet
+    lines = geometry_string.strip().split('\n')[1:]
+    pyscf_geom = [f"{line.split()[0]} {line.split()[1]} {line.split()[2]} {line.split()[3]}" for line in lines]
+    mol = gto.Mole()
+    mol.atom = "\n".join(pyscf_geom)
+    mol.basis = 'sto-3g'
+    mol.build()
+
+    # Kør SCF-beregningen
+    mf = scf.RHF(mol).run()
+
+    # Udfør Pipek-Mezey lokalisering på de besatte orbitaler
+    from pyscf import lo
+    occupied_mo_coeffs = mf.mo_coeff[:, :mol.nelectron//2]
+    loc_orb_coeffs = lo.PipekMezey(mol).kernel(occupied_mo_coeffs)
+
+    # Generer cube-filer for alle de lokaliserede orbitaler
+    for i in range(loc_orb_coeffs.shape[1]):
+        tools.cubegen.orbital(mol, f"LMO_{i+1}.cube", loc_orb_coeffs[:, i])
+
+    return mf.e_tot, loc_orb_coeffs.shape[1]
+
 # --- Data for alle molekyler ---
 molecules = {
     "water": {
@@ -204,7 +235,11 @@ with col1:
         st.markdown(selected_molecule_data["description"])
 
     st.header("2. Kør beregningen")
-    run_button = st.button(f"Beregn orbitaler for {molecule_name.capitalize()}")
+    run_button = st.button(f"Beregn Kanoniske Orbitaler for {molecule_name.capitalize()}")
+
+    st.markdown("---")
+    st.header("3. Alternativ Visualisering")
+    run_localized_button = st.button("Vis Lokaliserede Orbitaler (Hybrid-stil)")
 
 with col2:
     st.header("3. Visualiser resultater")
@@ -243,4 +278,28 @@ with col2:
             else:
                 st.warning(f"Kunne ikke finde .cube fil for orbital {orbital_index} (Søgte efter: {search_pattern})")
     else:
-        st.info("Klik på knappen til venstre for at starte en beregning og se resultaterne her.")
+        # Håndter klik på den nye knap for lokaliserede orbitaler
+        if run_localized_button:
+            with st.spinner(f"Kører beregning og lokalisering for {molecule_name}..."):
+                try:
+                    energy, num_lmos = run_pyscf_localization(selected_molecule_data["geometry"])
+                    st.success(f"Beregning færdig! Energi: {energy:.6f} Hartrees")
+                    st.info("De følgende visualiseringer viser de **lokaliserede molekylorbitaler (LMOs)**. Disse svarer tæt til de velkendte σ-bindinger og 'lone pairs' fra valensbindingsteorien (hybridisering).")
+                except Exception as e:
+                    st.error(f"En fejl opstod under beregningen: {e}")
+                    st.stop()
+
+            for i in range(1, num_lmos + 1):
+                cube_file = f"LMO_{i}.cube"
+                if os.path.exists(cube_file):
+                    geo_lines = selected_molecule_data["geometry"].strip().split('\n')[1:]
+                    num_atoms = len(geo_lines)
+                    xyz_geometry = f"{num_atoms}\n{molecule_name}\n" + "\n".join(geo_lines)
+                    
+                    st.subheader(f"Lokaliseret Orbital #{i}")
+                    viewer = create_orbital_viewer(xyz_geometry, cube_file)
+                    st.components.v1.html(viewer._make_html(), height=420, width=620)
+                else:
+                    st.warning(f"Kunne ikke finde .cube fil for lokaliseret orbital {i}")
+        else:
+            st.info("Klik på en af knapperne til venstre for at starte en beregning og se resultaterne her.")
