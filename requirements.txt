@@ -1,4 +1,4 @@
---find-links https://psi4.github.io/psi4-feedstock/
+--find-links https://psi4.github.io/psi4-feedstock/libpsi4/
 streamlit
 py3dmol
 psi4==1.7
