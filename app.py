@@ -35,7 +35,7 @@ def run_pyscf_calculation(geometry_string, orbitals_to_plot):
         os.remove(f)
 
     # Konverter Psi4-geometri til PySCF-format
-    lines = geometry_string.strip().split('\n')[2:]
+    lines = geometry_string.strip().split('\n')[1:]
     pyscf_geom = [f"{line.split()[0]} {line.split()[1]} {line.split()[2]} {line.split()[3]}" for line in lines]
 
     # Byg molekylet i PySCF
@@ -181,7 +181,7 @@ with col2:
             if found_files:
                 cube_file = found_files[0]
                 
-                geo_lines = selected_molecule_data["geometry"].strip().split('\n')[2:]
+                geo_lines = selected_molecule_data["geometry"].strip().split('\n')[1:]
                 num_atoms = len(geo_lines)
                 xyz_geometry = f"{num_atoms}\n{molecule_name}\n" + "\n".join(geo_lines)
                 
