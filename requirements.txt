@@ -1,5 +1,4 @@
---find-links https://psi4.github.io/psi4-feedstock/libpsi4/
 streamlit
 py3dmol
-psi4==1.7
 pydantic<2.0
+psi4 @ https://psi4.github.io/psi4-feedstock/psi4-1.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
