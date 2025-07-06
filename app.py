@@ -1,5 +1,6 @@
 import streamlit as st
-import psi4
+from pyscf import gto, scf, tools
+import numpy as np
 import py3Dmol
 import glob
 import os
@@ -25,30 +26,36 @@ def create_orbital_viewer(xyz_geometry, cube_file_path):
     view.zoomTo()
     return view
 
-def run_psi4_calculation(geometry_string, orbitals_to_plot):
+def run_pyscf_calculation(geometry_string, orbitals_to_plot):
     """
-    Udfører en Hartree-Fock-beregning og genererer cube-filer.
+    Udfører en Hartree-Fock-beregning med PySCF og genererer cube-filer.
     """
-    psi4.core.clean()  # Ryd op i gamle filer
-    psi4.set_memory('1 GB')
-    psi4.set_num_threads(2)
+    # Ryd op i gamle .cube filer
+    for f in glob.glob("*.cube"):
+        os.remove(f)
 
-    molecule = psi4.geometry(geometry_string)
+    # Konverter Psi4-geometri til PySCF-format
+    lines = geometry_string.strip().split('\n')[2:]
+    pyscf_geom = [f"{line.split()[0]} {line.split()[1]} {line.split()[2]} {line.split()[3]}" for line in lines]
 
-    psi4.set_options({
-        'basis': 'sto-3g',
-        'scf_type': 'pk',
-    })
+    # Byg molekylet i PySCF
+    mol = gto.Mole()
+    mol.atom = "\n".join(pyscf_geom)
+    mol.basis = 'sto-3g'
+    mol.build()
 
-    # Kør SCF-energiberegningen
-    scf_e, scf_wfn = psi4.energy('scf', return_wfn=True)
+    # Kør SCF-beregningen
+    mf = scf.RHF(mol).run()
+    scf_e = mf.e_tot
 
-    # Generer cube-filer for de specificerede orbitaler
-    psi4.set_options({
-        'cubeprop_tasks': ['orbitals'],
-        'cubeprop_orbitals': orbitals_to_plot
-    })
-    psi4.cubeprop(scf_wfn)
+    # Generer cube-filer for de ønskede orbitaler
+    for i in orbitals_to_plot:
+        # PySCF's orbital-indeksering starter ved 0, så vi trækker 1 fra.
+        orbital_index_pyscf = i - 1
+        # Bevar det gamle filnavnsmønster for at sikre kompatibilitet
+        # (Symmetri-delen er nu en pladsholder, da PySCF ikke giver den let)
+        filename = f"Psi_a_{i}_A1.cube"
+        tools.cubegen.orbital(mol, filename, mf.mo_coeff[:, orbital_index_pyscf])
     
     return scf_e
 
@@ -158,7 +165,7 @@ with col2:
     if run_button:
         with st.spinner(f"Kører Hartree-Fock beregning for {molecule_name}... Dette kan tage et øjeblik."):
             try:
-                energy = run_psi4_calculation(
+                energy = run_pyscf_calculation(
                     selected_molecule_data["geometry"],
                     selected_molecule_data["orbitals"]
                 )
