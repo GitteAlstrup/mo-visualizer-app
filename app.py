@@ -69,7 +69,17 @@ molecules = {
             H   0.000000   -0.757200   -0.469200
         """,
         # 10 elektroner = 5 besatte MOs. HOMO=5 (lone pair), LUMO=6.
-        "orbitals": [2, 3, 4, 5, 6]
+        "orbitals": [2, 3, 4, 5, 6],
+        "orbital_labels": {
+            4: "(σ binding)",
+            5: "(HOMO, n-orbital)",
+            6: "(LUMO, σ* antibindende)"
+        },
+        "description": """
+        Vand er et godt eksempel på, hvordan MO-teori beskriver både **sigma (σ) bindinger** og **ikke-bindende orbitaler (lone pairs)**.
+        *   **Orbital #4** viser en af de bindende σ-orbitaler.
+        *   **Orbital #5 (HOMO)** er primært lokaliseret på iltatomet og repræsenterer et af de to 'lone pairs'.
+        """
     },
     "ammonia": {
         "geometry": """
@@ -80,7 +90,11 @@ molecules = {
             H  -0.813654   -0.469781   -0.269099
         """,
         # 10 elektroner = 5 besatte MOs. HOMO=5 (lone pair), LUMO=6.
-        "orbitals": [2, 3, 4, 5, 6]
+        "orbitals": [2, 3, 4, 5, 6],
+        "orbital_labels": {
+            5: "(HOMO, n-orbital)",
+            6: "(LUMO)"
+        }
     },
     "methane": {
         "geometry": """
@@ -92,7 +106,16 @@ molecules = {
             H   0.629118  -0.629118  -0.629118
         """,
         # 10 elektroner = 5 besatte MOs. HOMO=5, LUMO=6.
-        "orbitals": [2, 3, 4, 5, 6]
+        "orbitals": [2, 3, 4, 5, 6],
+        "orbital_labels": {
+            5: "(HOMO)",
+            6: "(LUMO)"
+        },
+        "description": """
+        Methan er det klassiske eksempel på **sp³-hybridisering**. I molekylorbitalteori er de fire C-H bindinger ikke repræsenteret af fire identiske, lokaliserede orbitaler.
+        
+        I stedet er de beskrevet af en kombination af orbitalerne #2, #3, #4 og #5, som er degenererede (har samme energi) og tilsammen skaber den velkendte tetraediske elektronfordeling.
+        """
     },
     "ethane": {
         "geometry": """
@@ -107,7 +130,12 @@ molecules = {
             H   0.513311   -0.889165   -1.155000
         """,
         # 18 elektroner = 9 besatte MOs. HOMO=9, LUMO=10.
-        "orbitals": [7, 8, 9, 10]
+        "orbitals": [7, 8, 9, 10],
+        "orbital_labels": {
+            7: "(C-C σ-binding)",
+            9: "(HOMO)",
+            10: "(LUMO)"
+        }
     },
     "ethene": {
         "geometry": """
@@ -120,7 +148,17 @@ molecules = {
             H   0.000000    0.920000   -1.230000
         """,
         # 16 elektroner = 8 besatte MOs. HOMO=8 (pi), LUMO=9 (pi*).
-        "orbitals": [7, 8, 9]
+        "orbitals": [7, 8, 9],
+        "orbital_labels": {
+            7: "(C-C σ-binding)",
+            8: "(HOMO, π-binding)",
+            9: "(LUMO, π*-antibindende)"
+        },
+        "description": """
+        Ethen er det perfekte eksempel på **sp²-hybridisering**. Her kan man tydeligt adskille σ- og π-systemerne.
+        *   **Orbital #7** viser den stærke **sigma (σ) binding** mellem de to carbonatomer.
+        *   **Orbital #8 (HOMO)** er den berømte **pi (π) binding**, som dannes af p-orbitalerne og er afgørende for molekylets reaktivitet.
+        *   **Orbital #9 (LUMO)** er den antibindende **pi-stjerne (π*) orbital**, som er tom og vigtig for at forstå molekylets reaktioner og UV/Vis-spektroskopi."""
     },
     "ethyne": {
         "geometry": """
@@ -131,7 +169,12 @@ molecules = {
             H   0.000000    0.000000   -1.666500
         """,
         # 14 elektroner = 7 besatte MOs. HOMO=7.
-        "orbitals": [6, 7, 8, 9]
+        "orbitals": [6, 7, 8, 9],
+        "orbital_labels": {
+            6: "(π-binding #1)",
+            7: "(HOMO, π-binding #2)",
+            8: "(LUMO, π*-antibindende)"
+        }
     },
 }
 
@@ -155,6 +198,10 @@ with col1:
     
     st.info(f"**Geometri for {molecule_name.capitalize()}:**")
     st.code(selected_molecule_data["geometry"].strip(), language='text')
+
+    if "description" in selected_molecule_data:
+        st.markdown("---")
+        st.markdown(selected_molecule_data["description"])
 
     st.header("2. Kør beregningen")
     run_button = st.button(f"Beregn orbitaler for {molecule_name.capitalize()}")
@@ -185,7 +232,11 @@ with col2:
                 num_atoms = len(geo_lines)
                 xyz_geometry = f"{num_atoms}\n{molecule_name}\n" + "\n".join(geo_lines)
                 
-                st.subheader(f"Orbital #{orbital_index}")
+                # Hent label for orbitalen, hvis den findes
+                orbital_labels = selected_molecule_data.get("orbital_labels", {})
+                label = orbital_labels.get(orbital_index, "")
+                
+                st.subheader(f"Orbital #{orbital_index} {label}")
                 viewer = create_orbital_viewer(xyz_geometry, cube_file)
                 st.components.v1.html(viewer._make_html(), height=420, width=620)
                 
