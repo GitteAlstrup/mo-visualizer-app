@@ -26,7 +26,7 @@ def create_orbital_viewer(xyz_geometry, cube_file_path):
     view.zoomTo()
     return view
 
-def run_pyscf_calculation(geometry_string, orbitals_to_plot):
+def run_pyscf_calculation(geometry_string, orbitals_to_plot, basis_set='sto-3g'):
     """
     Udfører en Hartree-Fock-beregning med PySCF og genererer cube-filer.
     """
@@ -41,7 +41,7 @@ def run_pyscf_calculation(geometry_string, orbitals_to_plot):
     # Byg molekylet i PySCF
     mol = gto.Mole()
     mol.atom = "\n".join(pyscf_geom)
-    mol.basis = 'sto-3g'
+    mol.basis = basis_set
     mol.build()
 
     # Kør SCF-beregningen
@@ -187,11 +187,18 @@ st.write("Dette værktøj lader dig køre en kvantekemisk beregning og visualise
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.header("1. Vælg et molekyle")
+    st.header("1. Vælg molekyle og indstillinger")
     molecule_name = st.selectbox(
         "Vælg fra listen:",
         list(molecules.keys()),
         index=0 # Start med det første molekyle i listen
+    )
+
+    basis_set = st.selectbox(
+        "Vælg basis-sæt:",
+        ('sto-3g', '3-21g', '6-31g'),
+        index=0,
+        help="Et basis-sæt er et sæt af matematiske funktioner, der bruges til at bygge molekylorbitalerne. STO-3G er simpelt og hurtigt. 3-21G og 6-31G er mere komplekse og giver mere præcise energier, men tager længere tid at beregne."
     )
     
     selected_molecule_data = molecules[molecule_name]
@@ -214,7 +221,8 @@ with col2:
             try:
                 energy = run_pyscf_calculation(
                     selected_molecule_data["geometry"],
-                    selected_molecule_data["orbitals"]
+                    selected_molecule_data["orbitals"],
+                    basis_set
                 )
                 st.success(f"Beregning færdig! Hartree-Fock Energi: {energy:.6f} Hartrees")
             except Exception as e:
