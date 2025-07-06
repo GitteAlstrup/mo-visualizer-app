@@ -147,6 +147,11 @@ molecules = {
         
         I stedet er de beskrevet af en kombination af orbitalerne #2, #3, #4 og #5, som er degenererede (har samme energi) og tilsammen skaber den velkendte tetraediske elektronfordeling.
         """
+        "localization_description": """
+        For methan (sp³-hybridiseret) vil lokalisering omdanne de fire besatte, delokaliserede orbitaler til **fire næsten identiske, lokaliserede C-H sigma (σ) bindinger**.
+        
+        Hver af disse LMOs repræsenterer den binding, man i valensbindingsteori ville sige blev dannet af en sp³-orbital fra carbon og en 1s-orbital fra hydrogen.
+        """
     },
     "ethane": {
         "geometry": """
@@ -189,7 +194,12 @@ molecules = {
         Ethen er det perfekte eksempel på **sp²-hybridisering**. Her kan man tydeligt adskille σ- og π-systemerne.
         *   **Orbital #7** viser den stærke **sigma (σ) binding** mellem de to carbonatomer.
         *   **Orbital #8 (HOMO)** er den berømte **pi (π) binding**, som dannes af p-orbitalerne og er afgørende for molekylets reaktivitet.
-        *   **Orbital #9 (LUMO)** er den antibindende **pi-stjerne (π*) orbital**, som er tom og vigtig for at forstå molekylets reaktioner og UV/Vis-spektroskopi."""
+        *   **Orbital #9 (LUMO)** er den antibindende **pi-stjerne (π*) orbital**, som er tom og vigtig for at forstå molekylets reaktioner og UV/Vis-spektroskopi.""",
+        "localization_description": """
+        For ethen (sp²-hybridiseret) vil lokalisering adskille σ- og π-systemet. Du vil se:
+        *   **Fem σ-bindinger:** Én C-C σ-binding og fire C-H σ-bindinger.
+        *   **Én π-binding:** π-bindingen mellem de to carbonatomer er sværere at lokalisere og vil ofte blive vist som to "banan-formede" orbitaler over og under C-C aksen. Dette er en matematisk ækvivalent repræsentation af den velkendte π-binding.
+        """
     },
     "ethyne": {
         "geometry": """
@@ -205,7 +215,12 @@ molecules = {
             6: "(π-binding #1)",
             7: "(HOMO, π-binding #2)",
             8: "(LUMO, π*-antibindende)"
-        }
+        },
+        "localization_description": """
+        For ethyn (sp-hybridiseret) vil lokalisering vise:
+        *   **Tre σ-bindinger:** Én C-C σ-binding og to C-H σ-bindinger.
+        *   **To π-bindinger:** De to π-bindinger, som er vinkelret på hinanden, vil blive vist som to separate, lokaliserede orbitaler.
+        """
     },
 }
 
@@ -285,6 +300,10 @@ with col2:
                     energy, num_lmos = run_pyscf_localization(selected_molecule_data["geometry"])
                     st.success(f"Beregning færdig! Energi: {energy:.6f} Hartrees")
                     st.info("De følgende visualiseringer viser de **lokaliserede molekylorbitaler (LMOs)**. Disse svarer tæt til de velkendte σ-bindinger og 'lone pairs' fra valensbindingsteorien (hybridisering).")
+                    
+                    # Vis den specifikke beskrivelse for lokalisering, hvis den findes
+                    if "localization_description" in selected_molecule_data:
+                        st.markdown(selected_molecule_data["localization_description"])
                 except Exception as e:
                     st.error(f"En fejl opstod under beregningen: {e}")
                     st.stop()
